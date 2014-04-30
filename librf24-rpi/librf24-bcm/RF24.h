@@ -23,6 +23,9 @@
 #include "RF24_config.h"
 #include "./bcm2835.h"
 
+#define MAC_SIZE 3
+#define DATA_SIZE 1
+#define PACKET_SIZE (MAC_SIZE + DATA_SIZE)
 
 /**
  * Power Amplifier level.

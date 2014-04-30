@@ -64,6 +64,7 @@ int main(int argc, char** argv)
 
 	// Refer to RF24.h or nRF24L01 DS for settings
 	radio.begin();
+	/*
 	radio.enableDynamicPayloads();
 	radio.setAutoAck(1);
 	radio.setRetries(15,15);
@@ -80,11 +81,11 @@ int main(int argc, char** argv)
 	radio.openReadingPipe(3,pipes[3]);
 	radio.openReadingPipe(4,pipes[4]);
 	radio.openReadingPipe(5,pipes[5]);
-
+	*/
 	//
 	// Start listening
 	//
-	radio.startListening();
+	//radio.startListening();
 
 	//
 	// Dump the configuration of the rf unit for debugging
@@ -96,40 +97,40 @@ int main(int argc, char** argv)
 
 	while(1)
 	{
-		char receivePayload[32];
+		char receivePayload[PACKET_SIZE];
 		uint8_t pipe = 1;
 
 		// Start listening
-		radio.startListening();
+		//radio.startListening();
 
-		while ( radio.available(&pipe) ) 
+		while ( radio.available() ) 
 		{
-			len = radio.getDynamicPayloadSize();
-			radio.read( receivePayload, len );
+			//len = radio.getDynamicPayloadSize();
+			radio.read( receivePayload, PACKET_SIZE );
 
 			// Display it on screen
 			printf("Recv: size=%i payload=%s pipe=%i",len,receivePayload,pipe);
 
 			// Send back payload to sender
-			radio.stopListening();
+			//radio.stopListening();
 
 			// if pipe is 7, do not send it back
-			if ( pipe != 7 ) 
-			{
-				radio.write(receivePayload,len);
-				receivePayload[len]=0;
-				printf("\t Send: size=%i payload=%s pipe:%i\n",len,receivePayload,pipe);
-			}
-			else 
-			{
-				printf("\n");
-			}
+			//if ( pipe != 7 ) 
+			//{
+			//	radio.write(receivePayload,len);
+			//	receivePayload[len]=0;
+			//	printf("\t Send: size=%i payload=%s pipe:%i\n",len,receivePayload,pipe);
+			//}
+			//else 
+			//{
+			printf("\n");
+			//}
 			
-			pipe++;
+			//pipe++;
 			
 			// reset pipe to 0
-			if ( pipe > 6 ) 
-				pipe = 0;
+			//if ( pipe > 6 ) 
+			//	pipe = 0;
 		}
 		
 		delayMicroseconds(20);

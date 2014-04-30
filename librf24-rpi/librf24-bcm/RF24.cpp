@@ -283,7 +283,7 @@ void RF24::setChannel(uint8_t channel)
   // TODO: This method could take advantage of the 'wide_band' calculation
   // done in setChannel() to require certain channel spacing.
 
-  const uint8_t max_channel = 127;
+  const uint8_t max_channel = 82;
   write_register(RF_CH,min(channel,max_channel));
 }
 
@@ -422,7 +422,7 @@ bool RF24::begin(void)
 
 	// Initialise the CE pin of NRF24 (chip enable)
 	bcm2835_gpio_fsel(ce_pin, BCM2835_GPIO_FSEL_OUTP);
-  bcm2835_gpio_write(ce_pin, LOW);
+    bcm2835_gpio_write(ce_pin, LOW);
 	
 	// used to drive custom I/O to trigger my logic analyser
 	// bcm2835_gpio_fsel(GPIO_CTRL_PIN , BCM2835_GPIO_FSEL_OUTP);
@@ -450,47 +450,66 @@ bool RF24::begin(void)
   // WARNING: Delay is based on P-variant whereby non-P *may* require different timing.
   delay( 5 ) ;
 
+  write_register(CONFIG, 0x0A);	//Power ON
+  write_register(CONFIG, 0x3F); //2byte CRC, Recieve Mode
+  write_register(EN_RXADDR, 0x01); //Enable rx data pipe 1
+  write_register(RX_PW_P0, PACKET_SIZE); //Size of receive pipe
+  setAutoAck(false);	//Disable Auto acknowledge
+  setChannel(41);
+  write_register(SETUP_AW, 0x01); //Select 3 byte MAC LENGTH
+  // Then set the data rate to the slowest (and most reliable) speed supported by all
+  // hardware.
+  write_register(RF_SETUP, 0x06); //1Mbps at high power
+
   // Set 1500uS (minimum for 32B payload in ESB@250KBPS) timeouts, to make testing a little easier
   // WARNING: If this is ever lowered, either 250KBS mode with AA is broken or maximum packet
   // sizes must never be used. See documentation for a more complete explanation.
 	//printf("write_register(%02X, %02X)\n", SETUP_RETR, (0b0100 << ARD) | (0b1111 << ARC));
-  write_register(SETUP_RETR,(0b0100 << ARD) | (0b1111 << ARC));
+  //write_register(SETUP_RETR,(0b0100 << ARD) | (0b1111 << ARC));
+  //write_register(SETUP_RETR, 0); //Disable Retransmit
 
   // Restore our default PA level
-  setPALevel( RF24_PA_MAX ) ;
+  //setPALevel( RF24_PA_MAX ) ;
 
   // Determine if this is a p or non-p RF24 module and then
   // reset our data rate back to default value. This works
   // because a non-P variant won't allow the data rate to
   // be set to 250Kbps.
-  if( setDataRate( RF24_250KBPS ) )
-  {
-    p_variant = true ;
-  }
+  //if( setDataRate( RF24_250KBPS ) )
+  //{
+  //  p_variant = true ;
+  //}
   
-  // Then set the data rate to the slowest (and most reliable) speed supported by all
-  // hardware.
-  setDataRate( RF24_1MBPS ) ;
+
 
   // Initialize CRC and request 2-byte (16bit) CRC
-  setCRCLength( RF24_CRC_16 ) ;
+  //setCRCLength( RF24_CRC_16 ) ;
   
   // Disable dynamic payloads, to match dynamic_payloads_enabled setting
-  write_register(DYNPD,0);
+ // write_register(DYNPD,0);
 
   // Reset current status
   // Notice reset and flush is the last thing we do
-  write_register(STATUS,_BV(RX_DR) | _BV(TX_DS) | _BV(MAX_RT) );
+  //write_register(STATUS,_BV(RX_DR) | _BV(TX_DS) | _BV(MAX_RT) );
 
   // Set up default configuration.  Callers can always change it later.
   // This channel should be universally safe and not bleed over into adjacent
   // spectrum.
-  setChannel(76);
+  //setChannel(41);
 
   // Flush buffers
   flush_rx();
   flush_tx();
-	
+
+  //Clear Interrupts
+  write_register(STATUS, 0x70);
+
+  const uint8_t buf[3] = { 0x56, 0x34, 0x12 };
+  //Set address to listen on 
+  write_register(RX_ADDR_P0, buf, 3);
+
+
+  bcm2835_gpio_write(ce_pin, HIGH); //Finish modifying config registers
 	return true;
 }
 

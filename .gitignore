@@ -16,3 +16,10 @@ Session.vim
 librf*.so.*
 .DS*
 
+*.opensdf
+*.sln
+*.suo
+*.vcxproj
+*.filters
+librf24-rpi/librf24-bcm/RF24/RF24/readme.txt
+*.sdf
