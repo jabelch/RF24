@@ -71,7 +71,7 @@ uint8_t RF24::write_register(uint8_t reg, uint8_t value)
 	uint8_t * prx = spi_rxbuff;
 	uint8_t * ptx = spi_txbuff;
 
-	*ptx++ = ( W_REGISTER | ( REGISTER_MASK & reg ) );
+	*ptx++ = ( W_REGISTER | ( REGISTER_MASK & reg ) ); //0x20 | (0x1F & reg) 
 	*ptx = value ;
 	
   bcm2835_spi_transfernb( (char *) spi_txbuff, (char *) spi_rxbuff, 2);
@@ -1050,7 +1050,7 @@ void RF24::setCRCLength(rf24_crclength_e length)
     config |= _BV(EN_CRC);
     config |= _BV( CRCO );
   }
-  write_register( CONFIG, config ) ;
+  write_register( CONFIG, config ) ; //UPPER BYTE[ 0x20 | (0x1F & 0x0F) ] LOWER [config]
 }
 
 /****************************************************************************/
