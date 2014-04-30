@@ -71,7 +71,7 @@ int main(int argc, char** argv)
   // Setup and configure rf radio
   //
   radio.begin();
-	
+
   radio.setAutoAck(false);
 
   // Get into standby mode
@@ -82,27 +82,27 @@ int main(int argc, char** argv)
 
   // Print out header, high then low digit
   int i = 0;
-	
+
   while ( i < num_channels )
   {
     printf("%x",i>>4);
     ++i;
   }
   printf("\n");
-	
+
   i = 0;
   while ( i < num_channels )
   {
     printf("%x",i&0xf);
     ++i;
   }
-  printf("\n");       
-	
+  printf("\n");
+
 	// forever loop
   while(1)
 	{
 		if ( reset_array == 1 )
-		{	
+		{
 			// Clear measurement values
 			memset(values,0,sizeof(values));
 			printf("\n");
@@ -136,10 +136,10 @@ int main(int argc, char** argv)
 			printf("%x",min(0xf,(values[i]&0xf)));
 			++i;
 		}
-		
+
 		printf("\n");
 	}
-	
+
   return 0;
 }
 

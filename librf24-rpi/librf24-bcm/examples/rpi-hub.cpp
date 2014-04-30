@@ -41,9 +41,9 @@ using namespace std;
 //						0xF0F0F0F0F1, 0xF0F0F0F0F2 
 //					};
 const uint64_t pipes[6] = 
-					{ 0x123456LL, 0x123456LL, 
-						0x57EB94LL, 0x123456LL, 
-						0x123456LL, 0x123456LL 
+					{ 0x123456, 0x123456, 
+						0x57EB94, 0x123456, 
+						0x123456, 0x123456 
 					};
 
 // CE Pin, CSN Pin, SPI Speed
@@ -73,7 +73,8 @@ int main(int argc, char** argv)
 	radio.setCRCLength(RF24_CRC_16);
 
 	// Open 6 pipes for readings ( 5 plus pipe0, also can be used for reading )
-	radio.openWritingPipe(pipes[0]);
+//	radio.openWritingPipe(pipes[0]);
+	radio.openReadingPipe(0,pipes[0]);
 	radio.openReadingPipe(1,pipes[1]);
 	radio.openReadingPipe(2,pipes[2]);
 	radio.openReadingPipe(3,pipes[3]);
@@ -89,18 +90,18 @@ int main(int argc, char** argv)
 	// Dump the configuration of the rf unit for debugging
 	//
 	radio.printDetails();
-	
+
 	printf("Output below : \n");
 	delay(1);
-	
+
 	while(1)
 	{
 		char receivePayload[32];
 		uint8_t pipe = 1;
-		
+
 		// Start listening
 		radio.startListening();
-					
+
 		while ( radio.available(&pipe) ) 
 		{
 			len = radio.getDynamicPayloadSize();
