@@ -1,17 +1,17 @@
-/* 
+/*
  *
  *  Filename : rpi-hub.cpp
  *
  *  This program makes the RPi as a hub listening to all six pipes from the remote sensor nodes ( usually Arduino )
  *  and will return the packet back to the sensor on pipe0 so that the sender can calculate the round trip delays
  *  when the payload matches.
- *  
+ *
  *  I encounter that at times, it also receive from pipe7 ( or pipe0 ) with content of FFFFFFFFF that I will not sent
  *  back to the sender
  *
  *  Refer to RF24/examples/rpi_hub_arduino/ for the corresponding Arduino sketches to work with this code.
- * 
- *  
+ *
+ *
  *  CE is not used and CSN is GPIO25 (not pinout)
  *
  *  Refer to RPi docs for GPIO numbers
@@ -35,15 +35,15 @@ using namespace std;
 
 // Radio pipe addresses for the 2 nodes to communicate.
 // First pipe is for writing, 2nd, 3rd, 4th, 5th & 6th is for reading...
-//const uint64_t pipes[6] = 
+//const uint64_t pipes[6] =
 //					{ 0xF0F0F0F0D2LL, 0xF0F0F0F0E1LL, 
 //						0xF0F0F0F0E2LL, 0xF0F0F0F0E3LL, 
 //						0xF0F0F0F0F1, 0xF0F0F0F0F2 
 //					};
-const uint64_t pipes[6] = 
-					{ 0x123456, 0x123456, 
-						0x57EB94, 0x123456, 
-						0x123456, 0x123456 
+const uint64_t pipes[6] =
+					{ 0x123456, 0x123456,
+						0x57EB94, 0x123456,
+						0x123456, 0x123456
 					};
 
 // CE Pin, CSN Pin, SPI Speed
@@ -52,13 +52,13 @@ const uint64_t pipes[6] =
 //RF24 radio(RPI_V2_GPIO_P1_22, RPI_V2_GPIO_P1_18, BCM2835_SPI_SPEED_1MHZ);
 
 // Setup for GPIO 22 CE and CE0 CSN with SPI Speed @ 4Mhz
-//RF24 radio(RPI_V2_GPIO_P1_15, BCM2835_SPI_CS0, BCM2835_SPI_SPEED_4MHZ); 
+//RF24 radio(RPI_V2_GPIO_P1_15, BCM2835_SPI_CS0, BCM2835_SPI_SPEED_4MHZ);
 
 // Setup for GPIO 22 CE and CE1 CSN with SPI Speed @ 8Mhz
-RF24 radio(RPI_V2_GPIO_P1_15, RPI_V2_GPIO_P1_26, BCM2835_SPI_SPEED_8MHZ);  
+RF24 radio(RPI_V2_GPIO_P1_15, RPI_V2_GPIO_P1_26, BCM2835_SPI_SPEED_8MHZ);
 
 
-int main(int argc, char** argv) 
+int main(int argc, char** argv)
 {
 	uint8_t len;
 
@@ -73,7 +73,7 @@ int main(int argc, char** argv)
 //	radio.setChannel(49);
 //	radio.setCRCLength(RF24_CRC_16);
 
-	radio.setPayloadSize(PACKET_SIZE);
+	radio.setPayloadSize(PACKET_SIZE + MAC_SIZE);
 	// Open 6 pipes for readings ( 5 plus pipe0, also can be used for reading )
 //	radio.openWritingPipe(pipes[0]);
 //	radio.openReadingPipe(0,pipes[0]);
@@ -98,7 +98,7 @@ int main(int argc, char** argv)
 
 	while(1)
 	{
-		char receivePayload[PACKET_SIZE];
+		uint8_t receivePayload[32];
 		uint8_t pipe = 1;
 
 		// Start listening
@@ -107,25 +107,31 @@ int main(int argc, char** argv)
 		while ( radio.available() )
 		{
 			//len = radio.getDynamicPayloadSize();
-			radio.read( receivePayload, PACKET_SIZE );
+			len = 7;
+			radio.read( receivePayload, len );
+			for(int i = 0; i < len; i++)
+			{
+				printf("0x%x ",receivePayload[i]);
+			}
+			printf("\n");
 
 			// Display it on screen
-			printf("Recv: size=%i payload=%s",PACKET_SIZE,receivePayload);
+			printf("Recv: size=%i payload=%s",len,receivePayload);
 
 			// Send back payload to sender
-//			radio.stopListening();
+			radio.stopListening();
 
 			// if pipe is 7, do not send it back
-			//if ( pipe != 7 )
-			//{
-			//	radio.write(receivePayload,len);
-			//	receivePayload[len]=0;
-			//	printf("\t Send: size=%i payload=%s pipe:%i\n",len,receivePayload,pipe);
-			//}
-			//else
-			//{
+			if ( pipe != 7 )
+			{
+				radio.write(receivePayload,len);
+				receivePayload[len]=0;
+				printf("\t Send: size=%i payload=%s pipe:%i\n",len,receivePayload,pipe);
+			}
+			else
+			{
 			printf("\n");
-			//}
+			}
 
 			//pipe++;
 
